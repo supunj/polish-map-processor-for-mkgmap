@@ -1,7 +1,7 @@
 '''
 Created on Mar 3, 2013
 
-@author: SupunJ
+@author: Supun Jayathilake(supunj@gmail.com)
 '''
 from decimal import Decimal
 from multiprocessing.dummy import dict
