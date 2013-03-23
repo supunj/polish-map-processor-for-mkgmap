@@ -6,6 +6,7 @@ Created on Mar 4, 2013
 
 import re
 from decimal import Decimal
+from timeit import itertools
 
 class PolishUtil(object):
     '''
@@ -46,3 +47,10 @@ class PolishUtil(object):
         mp_file.seek(0)
         
         return dictionary
+    
+    # Gets elements in an iterator in pairs
+    def pairwise(self, iterable):
+        #"s -> (s0,s1), (s1,s2), (s2, s3), ..."
+        a, b = itertools.tee(iterable)
+        next(b, None)
+        return zip(a, b)

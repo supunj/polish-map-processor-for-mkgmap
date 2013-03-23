@@ -5,17 +5,12 @@ Created on Mar 4, 2013
 '''
 
 import re
-from polish.element import Polyline
+from polish.element import Polyline, Restriction
 
 class FeatureHandler():
-    '''
-    classdocs
-    '''
     
     def __init__(self):
-        '''
-        Constructor
-        '''
+        pass
         
     # Return all segment contents in a dictionary
     def _getSegmentinDictionary(self, segment_contents):
@@ -37,8 +32,8 @@ class FeatureHandler():
         # Add all Data elements
         for key, value in segment_dict.items():
             if re.match(r'^(Data\d+)', key, flags=0):
-                shape.set_data(key, value)
-         
+                shape.set_data(int(''.join([i for i in key if i.isnumeric()])), value)
+
     # Handle the IMG_ID segment
     def handle_IMG_ID(self, segment_contents):
         return ''.join(segment_contents)
@@ -61,15 +56,26 @@ class FeatureHandler():
         # Add all Nod elements
         for key, value in segment_dict.items():
             if re.match(r'^(Nod\d+)', key, flags=0):
-                polyLine.set_nod(key, value)
+                polyLine.set_nod(int(value.split(',')[0]), value)
         
         # Generate additional routing nodes
         new_max_nod_id = polyLine.addAdditionalNods(max_nod_id, nod_frequency)
-     
+ 
         # Add road boards to key types of roads
         polyLine.addRoadBoards()
         
-        return ''.join(polyLine.buildPolyline()), new_max_nod_id, max_road_id
+        # Split road from Nods
+        split_roads, new_max_road_id = polyLine.splitRoadfromNods(max_road_id)
+        
+        # All roads in a string
+        segment_strings = list()
+        
+        # Process all split roads
+        for road in split_roads:
+            # Combine all roads
+            segment_strings.append(''.join(road.buildPolyline()))
+        
+        return segment_strings, new_max_nod_id, new_max_road_id
     
     
     # Handle the POI segment
@@ -82,4 +88,25 @@ class FeatureHandler():
     
     # Handle the Restrict segment
     def handle_Restrict(self, segment_contents):
-        return ''.join(segment_contents)
+        restriction = Restriction()
+        
+        # Get all segment contents in a dictionary
+        segment_dict = self._getSegmentinDictionary(segment_contents);
+        
+        # Nod=27505
+        restriction.Nod = segment_dict['Nod']
+        
+        # TraffPoints=27521,27505,27530
+        arrTraffPoints = segment_dict['TraffPoints'].strip().split(',')
+        restriction.TraffPoints_From = arrTraffPoints[0]
+        restriction.TraffPoints_To = arrTraffPoints[2]
+        
+        # TraffRoads=12392,1854
+        arrTraffRoads = segment_dict['TraffRoads'].strip().split(',')
+        restriction.TraffRoads_From = arrTraffRoads[0]
+        restriction.TraffRoads_To = arrTraffRoads[1]
+        
+        # Time
+        restriction.Time = segment_dict['Time']
+        
+        return restriction
