@@ -14,7 +14,7 @@ from exception.custom_exceptions import ProgramParamException
 if __name__ == '__main__':
     try:
         # Check if all required parameters are supplied or not
-        if sys.argv[1] == None or sys.argv[2] == None or sys.argv[3] == None:
+        if len(sys.argv) == 1 or sys.argv[1] == None or sys.argv[2] == None or sys.argv[3] == None:
             raise ProgramParamException
         
         # List that keeps values that needs to be written to new mp file.
@@ -96,7 +96,9 @@ if __name__ == '__main__':
     except ProgramParamException:
         print("Please provide both the input/output files and the routing node frequency.")
     finally:
-        # Close all open files
-        input_mp.close()
-        output_mp.close()
-    
+        # Close all open files, Try first in case they were not yet defined.
+        try: input_mp; input_mp.close()
+        except: pass
+        
+        try: output_mp; output_mp.close()
+        except: pass    
